@@ -12,19 +12,27 @@ namespace FiTrackerV2.Controllers
         {
             _service = service;
         }
-
         public async Task<IActionResult> Index()
         {
             var exercises = await _service.GetAllExercisesAsync();
             return View(exercises);
         }
-
-        public IActionResult Create() => View();
+        public async Task<IActionResult> Details(int id)
+        {
+            var exercise = await _service.GetExerciseAsync(id);
+            if (exercise == null) return NotFound();
+            return View(exercise);
+        }
+        public IActionResult Create()
+        {
+            return View();
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create(Exercise model)
         {
             if (!ModelState.IsValid) return View(model);
+
             await _service.CreateExerciseAsync(model);
             return RedirectToAction(nameof(Index));
         }
@@ -40,12 +48,20 @@ namespace FiTrackerV2.Controllers
         public async Task<IActionResult> Edit(Exercise model)
         {
             if (!ModelState.IsValid) return View(model);
+
             await _service.UpdateExerciseAsync(model);
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost]
         public async Task<IActionResult> Delete(int id)
+        {
+            var exercise = await _service.GetExerciseAsync(id);
+            if (exercise == null) return NotFound();
+            return View(exercise);
+        }
+
+        [HttpPost, ActionName("DeleteConfirmed")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await _service.DeleteExerciseAsync(id);
             return RedirectToAction(nameof(Index));
