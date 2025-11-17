@@ -11,8 +11,10 @@ namespace FiTrackerV2
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            string connectionString = "Server=mssqlstud.fhict.local;Database=dbi297707_fitracker;User Id=dbi297707_fitracker;Password=Password123;TrustServerCertificate=True;";
             builder.Services.AddControllersWithViews();
-            builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
+
+            builder.Services.AddScoped<IExerciseRepository>(_ => new ExerciseRepository(connectionString));
             builder.Services.AddScoped<ExerciseService>();
 
             var app = builder.Build();

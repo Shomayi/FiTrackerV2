@@ -1,6 +1,6 @@
 ﻿using FiTrackerV2.Domain.Interfaces;
 using FiTrackerV2.Domain.Models;
-using MySqlConnector;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,35 +14,41 @@ namespace FiTrackerV2.DAL
     {
         private readonly string _connectionString;
 
-        public ExerciseRepository(IConfiguration config)
+        public ExerciseRepository(string connectionString)
         {
-            _connectionString = config.GetConnectionString("FiTrackerDb");
+            _connectionString = connectionString;
+        }
+
+        private SqlConnection GetConnection()
+        {
+            return new SqlConnection(_connectionString);
         }
 
         public async Task<int> CreateAsync(Exercise exercise)
         {
-            await using var conn = new MySqlConnection(_connectionString);
+            await using var conn = GetConnection();
             await conn.OpenAsync();
 
-            var cmd = new MySqlCommand(
-                "INSERT INTO Exercises (Name, Sets, Reps, Weight) VALUES (@name, @sets, @reps, @weight); SELECT LAST_INSERT_ID();",
+            var cmd = new SqlCommand(
+                "INSERT INTO Exercises (Name, Sets, Reps, Weight) VALUES (@name, @sets, @reps, @weight); SELECT SCOPE_IDENTITY();",
                 conn
             );
+
             cmd.Parameters.AddWithValue("@name", exercise.Name);
             cmd.Parameters.AddWithValue("@sets", exercise.Sets);
             cmd.Parameters.AddWithValue("@reps", exercise.Reps);
             cmd.Parameters.AddWithValue("@weight", exercise.Weight);
 
-            var id = (long)await cmd.ExecuteScalarAsync();
-            return (int)id;
+            var id = await cmd.ExecuteScalarAsync();
+            return Convert.ToInt32(id);
         }
 
         public async Task<Exercise> GetByIdAsync(int id)
         {
-            await using var conn = new MySqlConnection(_connectionString);
+            await using var conn = GetConnection();
             await conn.OpenAsync();
 
-            var cmd = new MySqlCommand("SELECT * FROM Exercises WHERE Id = @id", conn);
+            var cmd = new SqlCommand("SELECT * FROM Exercises WHERE Id = @id", conn);
             cmd.Parameters.AddWithValue("@id", id);
 
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -50,47 +56,51 @@ namespace FiTrackerV2.DAL
             {
                 return new Exercise
                 {
-                    Id = reader.GetInt32("Id"),
-                    Name = reader.GetString("Name"),
-                    Sets = reader.GetInt32("Sets"),
-                    Reps = reader.GetInt32("Reps"),
-                    Weight = reader.GetDecimal("Weight")
+                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                    Name = reader.GetString(reader.GetOrdinal("Name")),
+                    Sets = reader.GetInt32(reader.GetOrdinal("Sets")),
+                    Reps = reader.GetInt32(reader.GetOrdinal("Reps")),
+                    Weight = reader.GetDecimal(reader.GetOrdinal("Weight"))
                 };
             }
+
             return null;
         }
 
         public async Task<List<Exercise>> GetAllAsync()
         {
             var exercises = new List<Exercise>();
-            await using var conn = new MySqlConnection(_connectionString);
+            await using var conn = GetConnection();
             await conn.OpenAsync();
 
-            var cmd = new MySqlCommand("SELECT * FROM Exercises", conn);
+            var cmd = new SqlCommand("SELECT * FROM Exercises", conn);
             await using var reader = await cmd.ExecuteReaderAsync();
+
             while (await reader.ReadAsync())
             {
                 exercises.Add(new Exercise
                 {
-                    Id = reader.GetInt32("Id"),
-                    Name = reader.GetString("Name"),
-                    Sets = reader.GetInt32("Sets"),
-                    Reps = reader.GetInt32("Reps"),
-                    Weight = reader.GetDecimal("Weight")
+                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                    Name = reader.GetString(reader.GetOrdinal("Name")),
+                    Sets = reader.GetInt32(reader.GetOrdinal("Sets")),
+                    Reps = reader.GetInt32(reader.GetOrdinal("Reps")),
+                    Weight = reader.GetDecimal(reader.GetOrdinal("Weight"))
                 });
             }
+
             return exercises;
         }
 
         public async Task<bool> UpdateAsync(Exercise exercise)
         {
-            await using var conn = new MySqlConnection(_connectionString);
+            await using var conn = GetConnection();
             await conn.OpenAsync();
 
-            var cmd = new MySqlCommand(
+            var cmd = new SqlCommand(
                 "UPDATE Exercises SET Name=@name, Sets=@sets, Reps=@reps, Weight=@weight WHERE Id=@id",
                 conn
             );
+
             cmd.Parameters.AddWithValue("@name", exercise.Name);
             cmd.Parameters.AddWithValue("@sets", exercise.Sets);
             cmd.Parameters.AddWithValue("@reps", exercise.Reps);
@@ -102,10 +112,10 @@ namespace FiTrackerV2.DAL
 
         public async Task<bool> DeleteAsync(int id)
         {
-            await using var conn = new MySqlConnection(_connectionString);
+            await using var conn = GetConnection();
             await conn.OpenAsync();
 
-            var cmd = new MySqlCommand("DELETE FROM Exercises WHERE Id=@id", conn);
+            var cmd = new SqlCommand("DELETE FROM Exercises WHERE Id=@id", conn);
             cmd.Parameters.AddWithValue("@id", id);
 
             return await cmd.ExecuteNonQueryAsync() > 0;
