@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FiTrackerV2.Domain\FiTrackerV2.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

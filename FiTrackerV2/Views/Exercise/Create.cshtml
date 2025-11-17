@@ -1,0 +1,29 @@
+﻿@using FiTrackerV2.Domain.Models
+@model Exercise
+
+@{
+    ViewData["Title"] = "Create Exercise";
+}
+
+<h1>Create Exercise</h1>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Sets" class="form-label"></label>
+        <input asp-for="Sets" type="number" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Reps" class="form-label"></label>
+        <input asp-for="Reps" type="number" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Weight" class="form-label"></label>
+        <input asp-for="Weight" type="number" step="0.1" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

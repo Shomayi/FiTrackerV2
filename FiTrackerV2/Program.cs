@@ -1,3 +1,7 @@
+using FiTrackerV2.BLL;
+using FiTrackerV2.DAL;
+using FiTrackerV2.Domain.Interfaces;
+
 namespace FiTrackerV2
 {
     public class Program
@@ -8,6 +12,8 @@ namespace FiTrackerV2
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
+            builder.Services.AddScoped<ExerciseService>();
 
             var app = builder.Build();
 
